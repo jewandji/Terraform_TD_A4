@@ -1,0 +1,14 @@
+# Ignorer les dossiers temporaires Terraform
+.terraform/
+.terraform.lock.hcl
+
+# Ignorer les fichiers d'état (Contiennent des secrets !)
+*.tfstate
+*.tfstate.backup
+
+# Ignorer les variables sensibles
+*.tfvars
+
+# Ignorer les fichiers système/IDE
+.vscode/
+.DS_Store

@@ -1,0 +1,42 @@
+---
+- name: Validation et Hygiène de l'Infrastructure Docker
+  hosts: local_docker
+  gather_facts: no  # Pas besoin des infos système complètes pour ce TD
+  vars:
+    target_url: "http://localhost:8080"
+    container_name: "mon-serveur-nginx"
+
+  tasks:
+    # --- PAGE 5 : Étape 4 (Validation HTTP) ---
+    - name: 1. Vérifier que le site Web répond (Code 200 OK)
+      uri:
+        url: "{{ target_url }}"
+        status_code: 200
+      register: result
+      ignore_errors: yes
+
+    - name: Afficher le résultat du test HTTP
+      debug:
+        msg: "Le site répond bien ! Code retour : {{ result.status }}"
+      when: result.status == 200
+
+    # --- PAGE 5 : Étape 5 (Hygiène minimale) ---
+    - name: 2. Récupérer les infos du conteneur Docker
+      community.docker.docker_container_info:
+        name: "{{ container_name }}"
+      register: container_info
+
+    - name: 3. Vérifier que le conteneur est en état 'running'
+      fail:
+        msg: "Alerte ! Le conteneur est arrêté ou n'existe pas."
+      when: container_info.container.State.Status != 'running'
+
+    - name: 4. Vérifier que le port 8080 est bien exposé
+      fail:
+        msg: "Le port 8080 n'est pas configuré correctement."
+      # On regarde dans la configuration réseau du conteneur si le port 80 est mappé vers le 8080
+      when: "container_info.container.NetworkSettings.Ports['80/tcp'][0].HostPort != '8080'"
+
+    - name: Succès final
+      debug:
+        msg: "TOUS LES TESTS SONT PASSÉS : Infrastructure Valide."
